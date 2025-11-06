@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>AI Assistant</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-primary:#0a1628;--bg-secondary:#1e293b;--bg-tertiary:#334155;--accent:#72b6ff;--accent-hover:#3b6d8b;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--user-msg:#72b6ff;--assistant-msg:#1e293b;--border:#475569;--code-bg:#1e293b;--code-border:#475569;--theme-gradient:linear-gradient(135deg,#0f81ec,#72b6ff)}
+        [data-theme=terminal]{--bg-primary:#0a0a0a;--bg-secondary:#1a1a1a;--bg-tertiary:#2a2a2a;--accent:#6dfd60;--accent-hover:#3b8b42;--text-primary:#6dfd60;--text-secondary:#4a9a4e;--user-msg:#6dfd60;--assistant-msg:#1a1a1a;--border:#333;--code-bg:#0a0a0a;--code-border:#6dfd60;--theme-gradient:linear-gradient(135deg,#3d9633,#6dfd60)}
+        [data-theme=cherry]{--bg-primary:#1a0a0a;--bg-secondary:#2d1818;--bg-tertiary:#402020;--accent:#fd6060;--accent-hover:#8b3b3b;--text-primary:#fecaca;--text-secondary:#fca5a5;--user-msg:#fd6060;--assistant-msg:#2d1818;--border:#7f1d1d;--code-bg:#2d1818;--code-border:#fd6060;--theme-gradient:linear-gradient(135deg,#c03f3f,#fd6060)}
+        [data-theme=amber]{--bg-primary:#1a150a;--bg-secondary:#2d2418;--bg-tertiary:#403320;--accent:#fda93c;--accent-hover:#946612;--text-primary:#fef3c7;--text-secondary:#fde68a;--user-msg:#fda93c;--assistant-msg:#2d2418;--border:#78350f;--code-bg:#2d2418;--code-border:#fda93c;--theme-gradient:linear-gradient(135deg,#b36915,#fda93c)}
+        [data-theme=deepsea]{--bg-primary:#0a1414;--bg-secondary:#142424;--bg-tertiary:#1e3434;--accent:#cbe9d1;--accent-hover:#56705a;--text-primary:#e0f2fe;--text-secondary:#7dd3fc;--user-msg:#cbe9d1;--assistant-msg:#142424;--border:#164e63;--code-bg:#142424;--code-border:#cbe9d1;--theme-gradient:linear-gradient(135deg,#095f5c,#cbe9d1)}
+        [data-theme=rainy]{--bg-primary:#0a1428;--bg-secondary:#141e3b;--bg-tertiary:#1e2e55;--accent:#a4cdf8;--accent-hover:#3b6d8b;--text-primary:#f0f9ff;--text-secondary:#bae6fd;--user-msg:#a4cdf8;--assistant-msg:#141e3b;--border:#3b82f6;--code-bg:#141e3b;--code-border:#a4cdf8;--theme-gradient:linear-gradient(135deg,#0f81ec,#a4cdf8)}
+        [data-theme=winter]{--bg-primary:#141414;--bg-secondary:#242424;--bg-tertiary:#343434;--accent:#c0c0c0;--accent-hover:#a0a0a0;--text-primary:#f0f0f0;--text-secondary:#b0b0b0;--user-msg:#c0c0c0;--assistant-msg:#242424;--border:#606060;--code-bg:#242424;--code-border:#c0c0c0;--theme-gradient:linear-gradient(135deg,#969696,#c0c0c0)}
+        body{font-family:SF Mono,Monaco,Inconsolata,Roboto Mono,Source Code Pro,monospace;background:var(--bg-primary);color:var(--text-primary);height:100vh;overflow:hidden;transition:all .3s}
+        .container{display:flex;flex-direction:column;height:100vh}
+        @media(min-width:769px){.container{flex-direction:row}}
+        .sidebar{width:100%;max-width:320px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:-100%;height:100%;z-index:100;transition:left .3s;touch-action:pan-y}
+        .sidebar.open{left:0}
+        @media(min-width:769px){.sidebar{position:relative;left:auto}}
+        .sidebar-header{padding:15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .sidebar-header h2{font-size:16px;color:var(--accent)}
+        .close-sidebar{background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
+        .new-chat-btn{width:100%;padding:12px;background:var(--accent);color:var(--bg-primary);border:none;border-radius:8px;font-weight:600;cursor:pointer;margin:10px}
+        .history-list{flex:1;overflow-y:auto;padding:10px}
+        .history-item{padding:12px;margin-bottom:8px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:1px solid transparent}
+        .history-item:hover{border-color:var(--accent)}
+        .history-item.active{border-color:var(--accent);background:var(--accent);color:var(--bg-primary)}
+        .main-content{flex:1;display:flex;flex-direction:column}
+        .header{background:var(--bg-secondary);padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .header-left{display:flex;align-items:center;gap:10px}
+        .toggle-sidebar{background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);padding:8px;border-radius:8px;cursor:pointer}
+        .header-actions{display:flex;gap:8px}
+        .icon-btn{background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px}
+        .icon-btn:hover,.icon-btn.active{background:var(--accent);color:var(--bg-primary);border-color:var(--accent)}
+        .config-panel{position:fixed;top:0;right:-100%;width:100%;max-width:400px;height:100%;background:var(--bg-secondary);border-left:1px solid var(--border);padding:15px;transition:right .3s;overflow-y:auto;z-index:90;touch-action:pan-y}
+        .config-panel.open{right:0}
+        @media(min-width:769px){.config-panel{position:absolute;right:0}}
+        .config-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .config-header h2{font-size:16px;color:var(--accent)}
+        .close-config{background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
+        .config-section{margin-bottom:20px}
+        .config-section h3{font-size:13px;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+        .theme-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+        .theme-option{padding:12px;background:var(--bg-tertiary);border:2px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;position:relative;overflow:hidden}
+        .theme-option::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--theme-gradient);transform:scaleX(0);transition:transform .3s}
+        .theme-option:hover{border-color:var(--accent);transform:translateY(-2px)}
+        .theme-option:hover::before{transform:scaleX(1)}
+        .theme-option.active{border-color:var(--accent);background:var(--accent);color:var(--bg-primary)}
+        .theme-option.active::before{transform:scaleX(1);background:var(--bg-primary)}
+        .chat-area{flex:1;overflow-y:auto;padding:15px;background:var(--bg-primary);touch-action:pan-y;-webkit-overflow-scrolling:touch}
+        .message{margin-bottom:15px;display:flex;animation:fadeIn .3s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .message.user{justify-content:flex-end}
+        .message-content{max-width:85%;padding:12px 16px;border-radius:12px;word-break:break-word;white-space:pre-wrap;line-height:1.5}
+        .message.user .message-content{background:var(--accent);color:var(--bg-primary)}
+        .message.assistant .message-content{background:var(--assistant-msg);color:var(--text-primary);border:1px solid var(--border)}
+        .message.system .message-content{background:var(--bg-tertiary);color:var(--text-secondary);max-width:100%;text-align:center;font-size:13px;border:1px solid var(--border)}
+        .message-image{max-width:100%;border-radius:12px;margin-top:8px;border:1px solid var(--border)}
+        .message-content code{background:var(--code-bg);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.9em}
+        .message-content pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:12px;margin:12px 0;overflow-x:auto}
+        .input-area{padding:15px;background:var(--bg-secondary);border-top:1px solid var(--border)}
+        .input-controls{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+        .mode-btn{padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px}
+        .mode-btn.active{background:var(--accent);color:var(--bg-primary);border-color:var(--accent)}
+        .input-wrapper{display:flex;gap:8px}
+        .input-wrapper input{flex:1;padding:12px 16px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);border-radius:12px;font-size:16px}
+        .input-wrapper input:focus{outline:none;border-color:var(--accent)}
+        .send-btn{padding:12px 20px;background:var(--accent);color:var(--bg-primary);border:none;border-radius:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+        .send-btn:disabled{opacity:.5;cursor:not-allowed}
+        .typing-indicator{display:none;padding:12px 16px;background:var(--assistant-msg);border:1px solid var(--border);border-radius:12px;max-width:70px}
+        .typing-indicator.active{display:block}
+        .typing-indicator span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 2px;animation:typing 1.4s infinite}
+        .typing-indicator span:nth-child(2){animation-delay:.2s}
+        .typing-indicator span:nth-child(3){animation-delay:.4s}
+        @keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}}
+        .voice-indicator,.voice-controls,.continuous-voice,.speaking-indicator{display:none}
+        .voice-indicator.active,.voice-controls.active,.continuous-voice.active,.speaking-indicator.active{display:flex}
+        .voice-indicator{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg-primary);padding:15px 25px;border-radius:50px;font-size:15px;align-items:center;gap:10px;z-index:100}
+        .voice-wave{width:25px;height:25px;border-radius:50%;background:var(--bg-primary);animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.7}}
+        .voice-controls{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:var(--bg-secondary);padding:12px 15px;border-radius:50px;box-shadow:0 5px 20px rgba(0,0,0,.3);align-items:center;gap:10px;z-index:50;border:1px solid var(--border)}
+        .voice-status{font-size:13px;display:flex;align-items:center;gap:6px}
+        .voice-pulse{width:10px;height:10px;background:var(--accent);border-radius:50%;animation:voicePulse 1.5s infinite}
+        @keyframes voicePulse{0%{transform:scale(.8);opacity:.7}50%{transform:scale(1.2);opacity:1}100%{transform:scale(.8);opacity:.7}}
+        .volume-bar{width:50px;height:5px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden}
+        .volume-level{height:100%;background:var(--accent);width:0%;transition:width .1s}
+        .voice-end-btn{background:#ef4444;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer}
+        .continuous-voice{position:fixed;bottom:120px;right:15px;width:55px;height:55px;background:var(--accent);border-radius:50%;align-items:center;justify-content:center;color:var(--bg-primary);font-size:22px;box-shadow:0 4px 15px rgba(0,0,0,.2);cursor:pointer;z-index:40}
+        .continuous-voice.active{background:#ef4444;animation:pulse 1.5s infinite}
+        .speaking-indicator{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--bg-secondary);color:var(--text-primary);padding:8px 16px;border-radius:20px;align-items:center;gap:8px;z-index:30;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+        .speaking-wave{display:flex;gap:3px}
+        .speaking-wave span{width:3px;height:12px;background:var(--accent);border-radius:3px;animation:speakingWave 1s infinite}
+        .speaking-wave span:nth-child(2){animation-delay:.2s}
+        .speaking-wave span:nth-child(3){animation-delay:.4s}
+        @keyframes speakingWave{0%,100%{height:5px}50%{height:15px}}
+        @media(max-width:768px){.sidebar{width:85%;max-width:320px}.config-panel{width:100%}.message-content{max-width:90%;font-size:15px}.input-wrapper{flex-direction:column}.send-btn{width:100%;justify-content:center}.input-wrapper input{font-size:16px;padding:16px}.mode-btn{flex:1;justify-content:center}}
+        @media(max-width:480px){.theme-selector{grid-template-columns:1fr 1fr}.theme-option{font-size:11px;padding:10px}}
+        .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;display:none}
+        .overlay.active{display:block}
+    </style>
+</head>
+<body data-theme="ocean">
+<div class="container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><h2>Historial</h2><button class="close-sidebar" id="closeSidebar">x</button></div>
+        <button class="new-chat-btn" id="newChat">+ Nuevo</button>
+        <div class="history-list" id="history"></div>
+    </aside>
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left"><button class="toggle-sidebar" id="toggleSidebar">Menu</button></div>
+            <div class="header-actions"><button class="icon-btn" id="configBtn">Config</button></div>
+        </header>
+        <div class="config-panel" id="config">
+            <div class="config-header"><h2>Config</h2><button class="close-config" id="closeConfig">x</button></div>
+            <div class="config-section"><h3>Tema</h3><div class="theme-selector">
+                <div class="theme-option active" data-theme="ocean">Ocean</div>
+                <div class="theme-option" data-theme="terminal">Terminal</div>
+                <div class="theme-option" data-theme="cherry">Cherry</div>
+                <div class="theme-option" data-theme="amber">Amber</div>
+                <div class="theme-option" data-theme="deepsea">Deepsea</div>
+                <div class="theme-option" data-theme="rainy">Rainy</div>
+                <div class="theme-option" data-theme="winter">Winter</div>
+            </div></div>
+            <div class="config-section"><h3>Prompt</h3><textarea id="systemPrompt">Eres un asistente útil y conciso. Usa búsqueda/scraping cuando sea necesario.</textarea></div>
+        </div>
+        <div class="chat-area" id="chat">
+            <div class="message system"><div class="message-content">¡Hola! Hoy <span id="currentDate"></span>. Puedo chatear, voz, imágenes, búsqueda y scraping.</div></div>
+        </div>
+        <div class="input-area">
+            <div class="input-controls">
+                <button class="mode-btn active" id="textMode">Texto</button>
+                <button class="mode-btn" id="voiceMode">Voz</button>
+                <button class="mode-btn" id="imageMode">Imagen</button>
+            </div>
+            <div class="input-wrapper"><input type="text" id="input" placeholder="Escribe aquí..."><button class="send-btn" id="send"><span id="sendText">Enviar</span><span id="sendIcon">Send</span></button></div>
+        </div>
+    </main>
+</div>
+<div class="voice-indicator" id="voiceInd"><div class="voice-wave"></div><span>Escuchando...</span></div>
+<div class="voice-controls" id="voiceCtrl"><div class="voice-status"><div class="voice-pulse"></div><span id="voiceStat">Escuchando...</span></div><div class="voice-volume"><div class="volume-bar"><div class="volume-level" id="volLevel"></div></div></div><button class="voice-end-btn" id="voiceEnd">Finalizar</button></div>
+<div class="continuous-voice" id="contVoice">Microphone</div>
+<div class="speaking-indicator" id="speakInd"><div class="speaking-wave"><span></span><span></span><span></span></div><span>Hablando...</span></div>
+<div class="overlay" id="overlay"></div>
+<script>
+    const $ = id => document.getElementById(id);
+    const recognition = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
+    if (recognition) { recognition.lang = 'es-ES'; recognition.continuous = false; recognition.interimResults = true; }
+    let mode = 'text', history = [], chats = [], chatId = null, listening = false, cont = false, speaking = false, timeout = null;
+    const chat = $('chat'), input = $('input'), send = $('send'), sendText = $('sendText'), sendIcon = $('sendIcon');
+    function date() { const o = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; return new Date().toLocaleDateString('es-ES', o); }
+    $('currentDate').textContent = date();
+    function initVoice() {
+        if (!recognition) return;
+        recognition.onstart = () => { listening = true; $('voiceInd').classList.add('active'); sendText.textContent = 'Detener'; sendIcon.textContent = 'Stop'; };
+        recognition.onresult = e => { let t = ''; for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript; input.value = t; };
+        recognition.onerror = e => { add('system', 'Error voz: ' + e.error, true); stopListen(); };
+        recognition.onend = () => { stopListen(); input.value.trim() && sendMsg(); };
+    }
+    function stopListen() { listening = false; $('voiceInd').classList.remove('active'); sendText.textContent = mode === 'voice' ? 'Hablar' : 'Enviar'; sendIcon.textContent = mode === 'voice' ? 'Microphone' : 'Send'; }
+    function contVoice() {
+        const c = $('contVoice'), v = $('voiceCtrl'), e = $('voiceEnd'), s = $('voiceStat'), l = $('volLevel');
+        c.onclick = () => cont ? stopCont() : startCont(); e.onclick = stopCont;
+        function startCont() {
+            if (!recognition) return add('system', 'Voz no soportada', true);
+            cont = true; c.classList.add('active'); v.classList.add('active'); recognition.continuous = true; recognition.interimResults = true; recognition.start();
+            recognition.onstart = () => { listening = true; s.textContent = 'Escuchando...'; };
+            recognition.onresult = e => {
+                let t = '', f = false; for (let i = e.resultIndex; i < e.results.length; i++) { t += e.results[i][0].transcript; if (e.results[i].isFinal) f = true; }
+                l.style.width = (e.results[e.resultIndex][0].confidence * 100) + '%';
+                if (f && t.trim()) { input.value = t; sendMsg(); timeout = setTimeout(() => { if (cont && !listening) recognition.start(); }, 3000); }
+            };
+            recognition.onerror = () => setTimeout(() => { if (cont) recognition.start(); }, 2000);
+            recognition.onend = () => { listening = false; if (cont) setTimeout(() => { if (cont && !listening) recognition.start(); }, 1000); };
+        }
+        function stopCont() { cont = false; c.classList.remove('active'); v.classList.remove('active'); listening && recognition.stop(); timeout && clearTimeout(timeout); }
+    }
+    function speak(t) {
+        if ('speechSynthesis' in window) {
+            const u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES';
+            u.onstart = () => { speaking = true; $('speakInd').classList.add('active'); };
+            u.onend = () => { speaking = false; $('speakInd').classList.remove('active'); };
+            speechSynthesis.speak(u);
+        }
+    }
+    function load() { const s = localStorage.getItem('chats'); if (s) { chats = JSON.parse(s); renderHist(); chats[0] && loadChat(chats[0].id); } else newChat(); }
+    function save() { localStorage.setItem('chats', JSON.stringify(chats)); }
+    function newChat() { const n = { id: Date.now(), title: 'Nuevo', msgs: [], date: new Date().toLocaleString('es-ES') }; chats.unshift(n); save(); loadChat(n.id); renderHist(); }
+    function loadChat(id) { chatId = id; const c = chats.find(x => x.id === id); if (c) { history = c.msgs; renderChat(); } renderHist(); }
+    function update() {
+        const c = chats.find(x => x.id === chatId); if (c) { c.msgs = history; if (history.length && c.title === 'Nuevo') { const m = history.find(x => x.role === 'user'); m && (c.title = m.content.slice(0, 40) + '...'); } save(); renderHist(); }
+    }
+    function renderHist() {
+        const h = $('history'); h.innerHTML = chats.map(c => `<div class="history-item ${c.id === chatId ? 'active' : ''}" data-id="${c.id}"><div class="history-title">${c.title}</div><div class="history-date">${c.date}</div></div>`).join('');
+        h.querySelectorAll('.history-item').forEach(i => i.onclick = () => { loadChat(+i.dataset.id); if (innerWidth <= 768) { $('sidebar').classList.remove('open'); $('overlay').classList.remove('active'); } });
+    }
+    function renderChat() {
+        chat.innerHTML = `<div class="message system"><div class="message-content">¡Hola! Hoy ${date()}. Puedo chatear, voz, imágenes, búsqueda y scraping.</div></div>`;
+        history.forEach(m => { if (m.role === 'user') add('user', m.content); else if (m.image) add('assistant', m.content, false, false, m.image); else if (m.scrape) addScrape(m.scrape); else { add('assistant', m.content); m.sources && addSources(m.sources); } });
+    }
+    function add(r, c, e = false, s = true, i = null) {
+        const d = document.createElement('div'); d.className = `message ${r}`;
+        const t = document.createElement('div'); t.className = `message-content ${e ? 'error' : ''}`;
+        t.innerHTML = r === 'assistant' && !e ? markdown(c) : c;
+        if (i) { const g = document.createElement('img'); g.src = i; g.className = 'message-image'; t.appendChild(g); }
+        d.appendChild(t); chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+        if (s && r !== 'system') { history.push({ role: r, content: c }); i && (history[history.length - 1].image = i); update(); }
+    }
+    function addSources(s) {
+        const d = document.createElement('div'); d.className = 'search-sources'; d.innerHTML = '<h4>Fuentes:</h4>' + s.map(x => `<a href="${x.url}" target="_blank" class="source-link">• ${x.title}</a>`).join('');
+        chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+    }
+    function addScrape(d) {
+        const s = document.createElement('div'); s.className = 'scrape-summary'; s.innerHTML = `<div class="scrape-summary-title">Análisis: ${d.url}</div><div class="scrape-summary-content">${markdown(d.summary)}</div><div class="scrape-summary-url">${d.url}</div>`;
+        chat.appendChild(s); chat.scrollTop = chat.scrollHeight; history.push({ role: 'assistant', content: `Análisis: ${d.url}`, scrape: d }); update();
+    }
+    function typing() { const d = document.createElement('div'); d.id = 'typing'; d.className = 'message assistant'; d.innerHTML = '<div class="typing-indicator active"><span></span><span></span><span></span></div>'; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; }
+    function removeTyping() { const t = $('typing'); t && t.remove(); }
+    function setMode(m) {
+        mode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); $(m + 'Mode').classList.add('active');
+        input.placeholder = m === 'text' ? 'Escribe aquí...' : m === 'voice' ? 'Hablar...' : 'Describe imagen...';
+        sendText.textContent = m === 'voice' ? 'Hablar' : m === 'image' ? 'Generar' : 'Enviar';
+        sendIcon.textContent = m === 'voice' ? 'Microphone' : m === 'image' ? 'Image' : 'Send';
+        if (m === 'voice') $('contVoice').classList.add('active'); else { $('contVoice').classList.remove('active'); cont && stopCont(); }
+    }
+    function toggleSidebar() { const s = $('sidebar'), o = $('overlay'); s.classList.toggle('open'); o.classList.toggle('active'); }
+    function closeSidebar() { $('sidebar').classList.remove('open'); $('overlay').classList.remove('active'); }
+    function toggleConfig() { const p = $('config'), b = $('configBtn'); p.classList.toggle('open'); b.classList.toggle('active'); p.classList.contains('open') ? $('overlay').classList.add('active') : $('overlay').classList.remove('active'); }
+    function closeConfig() { $('config').classList.remove('open'); $('configBtn').classList.remove('active'); $('overlay').classList.remove('active'); }
+    $('overlay').onclick = () => { closeSidebar(); closeConfig(); };
+    function changeTheme(t) { document.body.dataset.theme = t; localStorage.setItem('theme', t); document.querySelectorAll('.theme-option').forEach(o => o.classList.toggle('active', o.dataset.theme === t)); }
+    function loadTheme() { const t = localStorage.getItem('theme'); t && changeTheme(t); }
+    function markdown(t) { return t.replace(/^### (.*)$/gm, '<h3>$1</h3>').replace(/^## (.*)$/gm, '<h2>$1</h2>').replace(/^# (.*)$/gm, '<h1>$1</h1>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/`(.*?)`/g, '<code>$1</code>').replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>').replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>').replace(/\n\n/g, '</p><p>').replace(/^/, '<p>').replace(/$/, '</p>'); }
+    async function sendMsg() {
+        if (mode === 'voice' && !cont) { listening ? recognition.stop() : recognition && recognition.start(); return; }
+        const m = input.value.trim(); if (!m && mode !== 'voice') return;
+        input.disabled = true; send.disabled = true; add('user', m); input.value = ''; typing();
+        try {
+            let r, i, sc;
+            if (mode === 'image') { i = `https://image.pollinations.ai/prompt/${encodeURIComponent(m)}?width=512&height=512&nologo=true`; r = `Imagen: "${m}"`; removeTyping(); add('assistant', r, false, true, i); }
+            else {
+                if (needsScrape(m)) { add('system', 'Scraping...'); sc = { url: 'https://example.com', summary: 'Resumen simulado' }; }
+                r = 'Respuesta simulada (API real deshabilitada en preview)';
+                removeTyping(); add('assistant', r);
+                if (sc) addScrape(sc);
+                if (mode === 'voice' || cont) setTimeout(() => speak(r), 500);
+            }
+        } catch (e) { removeTyping(); add('system', 'Error: ' + e.message, true); }
+        finally { input.disabled = false; send.disabled = false; input.focus(); }
+    }
+    function needsScrape(q) { return /analiza|scrapea|extrae|resume|www\.|http|\.com/.test(q.toLowerCase()); }
+    send.onclick = sendMsg; input.onkeypress = e => e.key === 'Enter' && sendMsg();
+    $('newChat').onclick = newChat; $('toggleSidebar').onclick = toggleSidebar; $('closeSidebar').onclick = closeSidebar;
+    $('configBtn').onclick = toggleConfig; $('closeConfig').onclick = closeConfig;
+    document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setMode(b.id.replace('Mode', '').toLowerCase()));
+    document.querySelectorAll('.theme-option').forEach(b => b.onclick = () => changeTheme(b.dataset.theme));
+    window.onresize = () => { if (innerWidth > 768) { closeSidebar(); closeConfig(); } };
+    document.addEventListener('DOMContentLoaded', () => { initVoice(); contVoice(); load(); loadTheme(); input.focus(); });
+</script>
+</body>
+</html>

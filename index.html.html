@@ -1,0 +1,2627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a1628">
+    <title>AI Assistant - Chat Completo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Tema por defecto - Ocean */
+        :root {
+            --bg-primary: #0a1628;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --accent: #72b6ff;
+            --accent-hover: #3b6d8b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --user-msg: #72b6ff;
+            --assistant-msg: #1e293b;
+            --border: #475569;
+            --success: #10b981;
+            --error: #ef4444;
+            --code-bg: #1e293b;
+            --code-border: #475569;
+            --theme-gradient: linear-gradient(135deg, #0f81ec, #72b6ff);
+            --sidebar-width: 300px;
+            --config-width: 400px;
+        }
+
+        /* Tema Terminal */
+        [data-theme="terminal"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --accent: #6dfd60;
+            --accent-hover: #3b8b42;
+            --text-primary: #6dfd60;
+            --text-secondary: #4a9a4e;
+            --user-msg: #6dfd60;
+            --assistant-msg: #1a1a1a;
+            --border: #333333;
+            --code-bg: #0a0a0a;
+            --code-border: #6dfd60;
+            --theme-gradient: linear-gradient(135deg, #3d9633, #6dfd60);
+        }
+
+        /* Tema Cherry */
+        [data-theme="cherry"] {
+            --bg-primary: #1a0a0a;
+            --bg-secondary: #2d1818;
+            --bg-tertiary: #402020;
+            --accent: #fd6060;
+            --accent-hover: #8b3b3b;
+            --text-primary: #fecaca;
+            --text-secondary: #fca5a5;
+            --user-msg: #fd6060;
+            --assistant-msg: #2d1818;
+            --border: #7f1d1d;
+            --code-bg: #2d1818;
+            --code-border: #fd6060;
+            --theme-gradient: linear-gradient(135deg, #c03f3f, #fd6060);
+        }
+
+        /* Tema Amber */
+        [data-theme="amber"] {
+            --bg-primary: #1a150a;
+            --bg-secondary: #2d2418;
+            --bg-tertiary: #403320;
+            --accent: #fda93c;
+            --accent-hover: #946612;
+            --text-primary: #fef3c7;
+            --text-secondary: #fde68a;
+            --user-msg: #fda93c;
+            --assistant-msg: #2d2418;
+            --border: #78350f;
+            --code-bg: #2d2418;
+            --code-border: #fda93c;
+            --theme-gradient: linear-gradient(135deg, #b36915, #fda93c);
+        }
+
+        /* Tema Deepsea */
+        [data-theme="deepsea"] {
+            --bg-primary: #0a1414;
+            --bg-secondary: #142424;
+            --bg-tertiary: #1e3434;
+            --accent: #cbe9d1;
+            --accent-hover: #56705a;
+            --text-primary: #e0f2fe;
+            --text-secondary: #7dd3fc;
+            --user-msg: #cbe9d1;
+            --assistant-msg: #142424;
+            --border: #164e63;
+            --code-bg: #142424;
+            --code-border: #cbe9d1;
+            --theme-gradient: linear-gradient(135deg, #095f5c, #cbe9d1);
+        }
+
+        /* Tema Rainy */
+        [data-theme="rainy"] {
+            --bg-primary: #0a1428;
+            --bg-secondary: #141e3b;
+            --bg-tertiary: #1e2e55;
+            --accent: #a4cdf8;
+            --accent-hover: #3b6d8b;
+            --text-primary: #f0f9ff;
+            --text-secondary: #bae6fd;
+            --user-msg: #a4cdf8;
+            --assistant-msg: #141e3b;
+            --border: #3b82f6;
+            --code-bg: #141e3b;
+            --code-border: #a4cdf8;
+            --theme-gradient: linear-gradient(135deg, #0f81ec, #a4cdf8);
+        }
+
+        /* Tema Winter */
+        [data-theme="winter"] {
+            --bg-primary: #141414;
+            --bg-secondary: #242424;
+            --bg-tertiary: #343434;
+            --accent: #c0c0c0;
+            --accent-hover: #a0a0a0;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b0b0b0;
+            --user-msg: #c0c0c0;
+            --assistant-msg: #242424;
+            --border: #606060;
+            --code-bg: #242424;
+            --code-border: #c0c0c0;
+            --theme-gradient: linear-gradient(135deg, #969696, #c0c0c0);
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Overlay para móviles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 20;
+            height: 100%;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .close-sidebar:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(114, 182, 255, 0.3);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .history-item.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .history-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            width: 100%;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-sidebar {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .ascii-banner {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1;
+            color: var(--accent);
+            text-align: center;
+            white-space: pre;
+            text-shadow: 0 0 10px var(--accent);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .icon-btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .icon-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .config-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--config-width);
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            z-index: 25;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-panel.open {
+            transform: translateX(0);
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .config-header h2 {
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        .close-config {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .close-config:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .config-section h3 {
+            font-size: 14px;
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .config-section label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .config-section textarea {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .config-section textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .theme-option {
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 13px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--theme-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .theme-option:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-option:hover::before {
+            transform: scaleX(1);
+        }
+
+        .theme-option.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--bg-primary);
+            transform: scale(1.02);
+        }
+
+        .theme-option.active::before {
+            transform: scaleX(1);
+            background: var(--bg-primary);
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-primary);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .message.assistant .message-content {
+            background: var(--assistant-msg);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .message.system .message-content {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            max-width: 100%;
+            text-align: center;
+            font-size: 13px;
+            border: 1px solid var(--border);
+        }
+
+        .message-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Estilos Markdown */
+        .message-content h1, .message-content h2, .message-content h3 {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.3em; }
+        .message-content h3 { font-size: 1.1em; }
+
+        .message-content p {
+            margin-bottom: 12px;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .message-content li {
+            margin-bottom: 6px;
+        }
+
+        .message-content code {
+            background: var(--code-bg);
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-primary);
+        }
+
+        .message-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            margin: 12px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .message-content strong {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            padding: 14px 28px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(114, 182, 255, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 14px 18px;
+            background: var(--assistant-msg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-width: 70px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .voice-indicator {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 20px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(114, 182, 255, 0.5);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .voice-indicator.active {
+            display: flex;
+        }
+
+        .voice-wave {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* Mejoras para modo voz */
+        .voice-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 50;
+            border: 1px solid var(--border);
+        }
+
+        .voice-controls.active {
+            display: flex;
+        }
+
+        .voice-status {
+            color: var(--text-primary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-pulse {
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: voicePulse 1.5s infinite;
+        }
+
+        @keyframes voicePulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+
+        .voice-volume {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .volume-bar {
+            width: 60px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .volume-level {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .voice-end-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .voice-end-btn:hover {
+            background: #d63031;
+        }
+
+        /* Mejoras para conversación continua */
+        .continuous-voice {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-primary);
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 40;
+            transition: all 0.3s;
+        }
+
+        .continuous-voice.active {
+            display: flex;
+        }
+
+        .continuous-voice:hover {
+            transform: scale(1.05);
+        }
+
+        .continuous-voice.listening {
+            background: var(--error);
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Indicador de respuesta por voz */
+        .speaking-indicator {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 30;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .speaking-indicator.active {
+            display: flex;
+        }
+
+        .speaking-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .speaking-wave span {
+            width: 3px;
+            height: 15px;
+            background: var(--accent);
+            border-radius: 3px;
+            animation: speakingWave 1s infinite;
+        }
+
+        .speaking-wave span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .speaking-wave span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes speakingWave {
+            0%, 100% { height: 5px; }
+            50% { height: 15px; }
+        }
+
+        /* Mejoras para móviles Android */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 85%;
+                --config-width: 100%;
+            }
+            
+            body {
+                font-size: 16px;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: fixed;
+                z-index: 100;
+                height: 100%;
+                width: var(--sidebar-width);
+                max-width: 320px;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            }
+            
+            .config-panel {
+                width: var(--config-width);
+                max-width: 100%;
+            }
+            
+            .message-content {
+                max-width: 85%;
+                font-size: 15px;
+            }
+            
+            .header {
+                padding: 12px 15px;
+                height: auto;
+            }
+            
+            .ascii-banner {
+                font-size: 10px;
+                display: none;
+            }
+            
+            .input-area {
+                padding: 15px;
+                padding-bottom: 25px;
+            }
+            
+            .mode-btn {
+                padding: 10px 12px;
+                font-size: 14px;
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .send-btn {
+                padding: 14px 20px;
+                font-size: 16px;
+                min-width: 80px;
+            }
+            
+            .input-wrapper input {
+                font-size: 16px;
+                padding: 16px;
+            }
+            
+            .voice-indicator {
+                bottom: 120px;
+                padding: 15px 25px;
+                font-size: 15px;
+            }
+            
+            .voice-wave {
+                width: 25px;
+                height: 25px;
+            }
+            
+            .continuous-voice {
+                bottom: 120px;
+                right: 15px;
+                width: 55px;
+                height: 55px;
+                font-size: 22px;
+            }
+            
+            .voice-controls {
+                bottom: 15px;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+            
+            .voice-status {
+                font-size: 13px;
+            }
+            
+            .voice-end-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            /* Mejoras para input en móviles */
+            .input-wrapper {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-wrapper input {
+                width: 100%;
+            }
+            
+            .send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            /* Mejoras para scroll en móviles */
+            .chat-area {
+                padding: 15px;
+                padding-bottom: 20px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .history-list {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .config-panel {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Mejoras para temas en móviles */
+            .theme-selector {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .theme-option {
+                padding: 12px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 90%;
+            }
+            
+            .ascii-banner {
+                display: none;
+            }
+            
+            .icon-btn {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            .input-controls {
+                gap: 8px;
+            }
+            
+            .mode-btn {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+            
+            .message-content {
+                font-size: 14px;
+            }
+            
+            .header-left {
+                gap: 10px;
+            }
+            
+            .continuous-voice {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+
+        .error {
+            background: var(--error) !important;
+            color: white !important;
+        }
+
+        .success {
+            background: var(--success) !important;
+            color: white !important;
+        }
+
+        .search-result {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .search-result:hover {
+            border-color: var(--accent);
+        }
+
+        .search-result-title {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .search-result-url {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .search-result-snippet {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-result-icon {
+            display: inline-block;
+            margin-right: 8px;
+            color: var(--accent);
+        }
+
+        .scrape-result {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .scrape-title {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .scrape-description {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .scrape-content {
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .source-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .search-sources {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .search-sources h4 {
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .source-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 3px;
+            word-break: break-all;
+        }
+
+        .source-link:hover {
+            color: var(--accent);
+        }
+
+        .scrape-summary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .scrape-summary-title {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .scrape-summary-content {
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .scrape-summary-url {
+            color: var(--text-secondary);
+            font-size: 11px;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body data-theme="ocean">
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="container">
+        <aside class="sidebar hidden" id="sidebar">
+            <div class="sidebar-header">
+                <h2>💬 Historial de Chats</h2>
+                <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+            </div>
+            <div class="sidebar-header">
+                <button class="new-chat-btn" id="newChatBtn">+ Nuevo Chat</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="toggle-sidebar" id="toggleSidebarBtn">☰</button>
+                    <div class="ascii-banner"> ██████╗
+██╔════╝
+██║     
+██║     
+╚██████╗
+ ╚═════╝</div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="configBtn">⚙️ Config</button>
+                </div>
+            </header>
+
+            <div class="config-panel" id="configPanel">
+                <div class="config-header">
+                    <h2>Configuración</h2>
+                    <button class="close-config" id="closeConfigBtn">✕</button>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Tema</h3>
+                    <label>Selecciona un tema para la interfaz:</label>
+                    <div class="theme-selector">
+                        <div class="theme-option active" data-theme="ocean">🌊 Ocean</div>
+                        <div class="theme-option" data-theme="terminal">💻 Terminal</div>
+                        <div class="theme-option" data-theme="cherry">🍒 Cherry</div>
+                        <div class="theme-option" data-theme="amber">🟡 Amber</div>
+                        <div class="theme-option" data-theme="deepsea">🌊 Deepsea</div>
+                        <div class="theme-option" data-theme="rainy">🌧️ Rainy</div>
+                        <div class="theme-option" data-theme="winter">❄️ Winter</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>System Prompt</h3>
+                    <label>Define la personalidad y comportamiento del asistente:</label>
+                    <textarea id="systemPrompt" placeholder="Ejemplo: Eres un asistente útil, amigable y experto en tecnología...">Eres un asistente de IA útil, amigable y conocedor. Respondes de manera clara y concisa. Cuando busques información en la web, úsala para dar respuestas precisas y actualizadas. Cuando scrapees páginas, extrae y resume la información más relevante. Usa formato markdown cuando sea apropiado para mejorar la legibilidad.</textarea>
+                </div>
+
+                <div class="config-section">
+                    <h3>Acerca de</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                        Chat impulsado por IA con capacidades de:
+                        <br>• 💬 Chat con búsqueda y scraping automáticos
+                        <br>• 🎤 Conversación por voz
+                        <br>• 🖼️ Generación de imágenes
+                        <br>• 🔍 Búsqueda web inteligente
+                        <br>• 📄 Scraping automático de páginas
+                        <br>• 📝 Soporte para Markdown
+                    </p>
+                </div>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="message system">
+                    <div class="message-content">
+                        👋 ¡Hola! Soy tu asistente de IA. Hoy es <span id="currentDate"></span>.<br>
+                        Puedo ayudarte con:
+                        <br>💬 Preguntas (buscaré y scrapearé información automáticamente)
+                        <br>🎤 Conversar por voz
+                        <br>🖼️ Generar imágenes
+                        <br>📄 Análisis de páginas web
+                        <br>📝 Respuestas con formato Markdown
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-controls">
+                    <button class="mode-btn active" id="textMode">💬 Texto</button>
+                    <button class="mode-btn" id="voiceMode">🎤 Voz</button>
+                    <button class="mode-btn" id="imageMode">🖼️ Imagen</button>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí..." />
+                    <button class="send-btn" id="sendBtn">
+                        <span id="sendBtnText">Enviar</span>
+                        <span id="sendBtnIcon">➤</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="voice-indicator" id="voiceIndicator">
+        <div class="voice-wave"></div>
+        <span>Escuchando...</span>
+    </div>
+
+    <!-- Nuevos elementos para modo voz mejorado -->
+    <div class="voice-controls" id="voiceControls">
+        <div class="voice-status">
+            <div class="voice-pulse"></div>
+            <span id="voiceStatusText">Escuchando...</span>
+        </div>
+        <div class="voice-volume">
+            <div class="volume-bar">
+                <div class="volume-level" id="volumeLevel"></div>
+            </div>
+        </div>
+        <button class="voice-end-btn" id="voiceEndBtn">Finalizar</button>
+    </div>
+    
+    <div class="continuous-voice" id="continuousVoiceBtn">
+        🎤
+    </div>
+    
+    <div class="speaking-indicator" id="speakingIndicator">
+        <div class="speaking-wave">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <span>Respondiendo por voz...</span>
+    </div>
+
+    <script>
+        let currentMode = 'text';
+        let conversationHistory = [];
+        let chats = [];
+        let currentChatId = null;
+        let recognition = null;
+        let isListening = false;
+        let isContinuousVoiceMode = false;
+        let isSpeaking = false;
+        let voiceTimeout = null;
+        let isMobile = false;
+
+        // Detectar si es un dispositivo móvil
+        function detectMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+        }
+
+        // Obtener fecha actual
+        function getCurrentDate() {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const today = new Date();
+            return today.toLocaleDateString('es-ES', options);
+        }
+
+        // Inicializar fecha en el mensaje de bienvenida
+        document.getElementById('currentDate').textContent = getCurrentDate();
+
+        // Inicializar reconocimiento de voz mejorado para Android
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'es-ES';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                
+                // Configuraciones específicas para Android
+                if (isMobile) {
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                }
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    document.getElementById('voiceIndicator').classList.add('active');
+                    document.getElementById('sendBtnText').textContent = 'Detener';
+                    document.getElementById('sendBtnIcon').textContent = '⏹';
+                    
+                    // Actualizar botón de voz continua
+                    if (isContinuousVoiceMode) {
+                        document.getElementById('continuousVoiceBtn').classList.add('listening');
+                    }
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            transcript += event.results[i][0].transcript;
+                        } else {
+                            // Para resultados intermedios en Android
+                            transcript += event.results[i][0].transcript;
+                        }
+                    }
+                    document.getElementById('userInput').value = transcript;
+                    
+                    // Actualizar indicador de volumen
+                    if (event.results[event.resultIndex] && event.results[event.resultIndex][0]) {
+                        const confidence = event.results[event.resultIndex][0].confidence;
+                        document.getElementById('volumeLevel').style.width = `${confidence * 100}%`;
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Error de reconocimiento de voz:', event.error);
+                    document.getElementById('voiceIndicator').classList.remove('active');
+                    document.getElementById('sendBtnText').textContent = 'Enviar';
+                    document.getElementById('sendBtnIcon').textContent = '➤';
+                    isListening = false;
+                    
+                    // Actualizar botón de voz continua
+                    if (isContinuousVoiceMode) {
+                        document.getElementById('continuousVoiceBtn').classList.remove('listening');
+                    }
+                    
+                    let errorMsg = '❌ Error al reconocer la voz. ';
+                    if (event.error === 'no-speech') {
+                        errorMsg += 'No se detectó voz. Intenta de nuevo.';
+                    } else if (event.error === 'not-allowed') {
+                        errorMsg += 'Permiso de micrófono denegado. Habilita el micrófono en tu navegador.';
+                    } else if (event.error === 'audio-capture') {
+                        errorMsg += 'No se pudo acceder al micrófono. Verifica los permisos.';
+                    } else if (event.error === 'network') {
+                        errorMsg += 'Error de red. Verifica tu conexión.';
+                    } else {
+                        errorMsg += 'Intenta de nuevo.';
+                    }
+                    addMessage('system', errorMsg, true);
+                };
+
+                recognition.onend = () => {
+                    document.getElementById('voiceIndicator').classList.remove('active');
+                    document.getElementById('sendBtnText').textContent = 'Enviar';
+                    document.getElementById('sendBtnIcon').textContent = '➤';
+                    isListening = false;
+                    
+                    // Actualizar botón de voz continua
+                    if (isContinuousVoiceMode) {
+                        document.getElementById('continuousVoiceBtn').classList.remove('listening');
+                    // En modo continuo, reiniciar reconocimiento
+                        setTimeout(() => {
+                            if (isContinuousVoiceMode && !isListening) {
+                                recognition.start();
+                            }
+                        }, 500);
+                    } else {
+                        // Si hay texto en el input, enviar el mensaje
+                        const input = document.getElementById('userInput');
+                        if (input.value.trim()) {
+                            sendMessage();
+                        }
+                    }
+                };
+            } else {
+                console.warn('El reconocimiento de voz no es compatible con este navegador.');
+                document.getElementById('voiceMode').style.display = 'none';
+                document.getElementById('continuousVoiceBtn').style.display = 'none';
+            }
+        }
+
+        // Funciones para modo voz continuo
+        function initContinuousVoiceMode() {
+            const continuousVoiceBtn = document.getElementById('continuousVoiceBtn');
+            const voiceControls = document.getElementById('voiceControls');
+            const voiceEndBtn = document.getElementById('voiceEndBtn');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+            const volumeLevel = document.getElementById('volumeLevel');
+            const speakingIndicator = document.getElementById('speakingIndicator');
+            
+            // Botón flotante para activar modo voz continuo
+            continuousVoiceBtn.addEventListener('click', () => {
+                if (!isContinuousVoiceMode) {
+                    startContinuousVoiceMode();
+                } else {
+                    stopContinuousVoiceMode();
+                }
+            });
+            
+            // Botón para finalizar modo voz
+            voiceEndBtn.addEventListener('click', () => {
+                stopContinuousVoiceMode();
+            });
+            
+            // Función para iniciar modo voz continuo
+            window.startContinuousVoiceMode = function() {
+                if (!recognition) {
+                    addMessage('system', '❌ El reconocimiento de voz no está disponible en este navegador.', true);
+                    return;
+                }
+                
+                isContinuousVoiceMode = true;
+                continuousVoiceBtn.classList.add('active');
+                voiceControls.classList.add('active');
+                
+                // Configurar reconocimiento para modo continuo
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                
+                // Iniciar reconocimiento
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error al iniciar reconocimiento:', error);
+                    addMessage('system', '❌ Error al iniciar el reconocimiento de voz.', true);
+                    stopContinuousVoiceMode();
+                }
+                
+                // Actualizar UI
+                voiceStatusText.textContent = 'Escuchando...';
+            };
+            
+            // Función para detener modo voz continuo
+            window.stopContinuousVoiceMode = function() {
+                isContinuousVoiceMode = false;
+                continuousVoiceBtn.classList.remove('active');
+                continuousVoiceBtn.classList.remove('listening');
+                voiceControls.classList.remove('active');
+                
+                if (recognition && isListening) {
+                    recognition.stop();
+                }
+                
+                if (voiceTimeout) {
+                    clearTimeout(voiceTimeout);
+                    voiceTimeout = null;
+                }
+            };
+        }
+
+        // Mejorar función speakText para mostrar indicador
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const speakingIndicator = document.getElementById('speakingIndicator');
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    speakingIndicator.classList.add('active');
+                };
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    speakingIndicator.classList.remove('active');
+                    
+                    // En modo voz continuo, reanudar escucha después de hablar
+                    if (isContinuousVoiceMode && !isListening) {
+                        setTimeout(() => {
+                            if (isContinuousVoiceMode && !isListening) {
+                                recognition.start();
+                            }
+                        }, 1000);
+                    }
+                };
+                
+                utterance.onerror = (event) => {
+                    isSpeaking = false;
+                    speakingIndicator.classList.remove('active');
+                    console.error('Error al sintetizar voz:', event);
+                };
+                
+                // Cancelar cualquier síntesis en curso
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Cargar chats del almacenamiento
+        function loadChats() {
+            const saved = localStorage.getItem('ai_assistant_chats');
+            if (saved) {
+                chats = JSON.parse(saved);
+                renderHistory();
+                if (chats.length > 0) {
+                    loadChat(chats[0].id);
+                } else {
+                    createNewChat();
+                }
+            } else {
+                createNewChat();
+            }
+        }
+
+        function saveChats() {
+            localStorage.setItem('ai_assistant_chats', JSON.stringify(chats));
+        }
+
+        function createNewChat() {
+            const newChat = {
+                id: Date.now(),
+                title: 'Nuevo Chat',
+                messages: [],
+                date: new Date().toLocaleString('es-ES')
+            };
+            chats.unshift(newChat);
+            saveChats();
+            loadChat(newChat.id);
+            renderHistory();
+        }
+
+        function loadChat(chatId) {
+            currentChatId = chatId;
+            const chat = chats.find(c => c.id === chatId);
+            if (chat) {
+                conversationHistory = chat.messages;
+                renderMessages();
+            }
+            renderHistory();
+        }
+
+        function updateCurrentChat() {
+            const chat = chats.find(c => c.id === currentChatId);
+            if (chat) {
+                chat.messages = conversationHistory;
+                if (conversationHistory.length > 0 && chat.title === 'Nuevo Chat') {
+                    const firstUserMsg = conversationHistory.find(m => m.role === 'user');
+                    if (firstUserMsg) {
+                        chat.title = firstUserMsg.content.substring(0, 50) + '...';
+                    }
+                }
+                saveChats();
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = chats.map(chat => `
+                <div class="history-item ${chat.id === currentChatId ? 'active' : ''}" data-chat-id="${chat.id}">
+                    <div class="history-title">${chat.title}</div>
+                    <div class="history-date">${chat.date}</div>
+                </div>
+            `).join('');
+
+            // Agregar event listeners a los items del historial
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    loadChat(parseInt(this.dataset.chatId));
+                    // Cerrar sidebar en móviles después de seleccionar un chat
+                    if (isMobile) {
+                        closeSidebar();
+                    }
+                });
+            });
+        }
+
+        function renderMessages() {
+            const chatArea = document.getElementById('chatArea');
+            chatArea.innerHTML = `
+                <div class="message system">
+                    <div class="message-content">
+                        👋 ¡Hola! Soy tu asistente de IA. Hoy es <span id="currentDate">${getCurrentDate()}</span>.<br>
+                        Puedo ayudarte con:
+                        <br>💬 Preguntas (buscaré y scrapearé información automáticamente)
+                        <br>🎤 Conversar por voz
+                        <br>🖼️ Generar imágenes
+                        <br>📄 Análisis de páginas web
+                        <br>📝 Respuestas con formato Markdown
+                    </div>
+                </div>
+            `;
+            conversationHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    addMessage('user', msg.content, false, false);
+                } else if (msg.role === 'assistant') {
+                    if (msg.image) {
+                        addMessage('assistant', msg.content, false, false, msg.image);
+                    } else if (msg.scrapeData) {
+                        addScrapeSummary(msg.scrapeData);
+                    } else {
+                        addMessage('assistant', msg.content, false, false);
+                        if (msg.sources) {
+                            addSources(msg.sources);
+                        }
+                    }
+                }
+            });
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + 'Mode').classList.add('active');
+
+            const input = document.getElementById('userInput');
+            const sendBtnText = document.getElementById('sendBtnText');
+            const sendBtnIcon = document.getElementById('sendBtnIcon');
+            
+            if (mode === 'text') {
+                input.placeholder = 'Escribe tu pregunta aquí...';
+                sendBtnText.textContent = 'Enviar';
+                sendBtnIcon.textContent = '➤';
+            } else if (mode === 'voice') {
+                input.placeholder = 'Haz clic en "Enviar" para hablar...';
+                sendBtnText.textContent = 'Hablar';
+                sendBtnIcon.textContent = '🎤';
+            } else if (mode === 'image') {
+                input.placeholder = 'Describe la imagen que quieres generar...';
+                sendBtnText.textContent = 'Generar';
+                sendBtnIcon.textContent = '🖼️';
+            }
+            
+            // Si se activa el modo voz, mostrar el botón flotante
+            const continuousVoiceBtn = document.getElementById('continuousVoiceBtn');
+            if (mode === 'voice') {
+                continuousVoiceBtn.style.display = 'flex';
+            } else {
+                continuousVoiceBtn.style.display = 'none';
+                // Si estaba activo el modo voz continuo, detenerlo
+                if (isContinuousVoiceMode) {
+                    stopContinuousVoiceMode();
+                }
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('hidden');
+            overlay.classList.toggle('active');
+            
+            // En móviles, prevenir scroll del body cuando el sidebar está abierto
+            if (isMobile) {
+                if (sidebar.classList.contains('hidden')) {
+                    document.body.style.overflow = 'auto';
+                } else {
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.add('hidden');
+            overlay.classList.remove('active');
+            
+            if (isMobile) {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            const overlay = document.getElementById('overlay');
+            const btn = document.getElementById('configBtn');
+            
+            panel.classList.toggle('open');
+            overlay.classList.toggle('active');
+            btn.classList.toggle('active');
+            
+            // En móviles, prevenir scroll del body cuando el panel está abierto
+            if (isMobile) {
+                if (panel.classList.contains('open')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'auto';
+                }
+            }
+        }
+
+        function closeConfig() {
+            const panel = document.getElementById('configPanel');
+            const overlay = document.getElementById('overlay');
+            const btn = document.getElementById('configBtn');
+            
+            panel.classList.remove('open');
+            overlay.classList.remove('active');
+            btn.classList.remove('active');
+            
+            if (isMobile) {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Función para cambiar tema
+        function changeTheme(themeName) {
+            document.body.setAttribute('data-theme', themeName);
+            localStorage.setItem('selectedTheme', themeName);
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.theme-option').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-theme') === themeName) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Cargar tema guardado
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme');
+            if (savedTheme) {
+                changeTheme(savedTheme);
+            }
+        }
+
+        // Parseador de Markdown simple
+        function parseMarkdown(text) {
+            let html = text;
+            
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            
+            // Bold
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Code inline
+            html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+            
+            // Code blocks
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Links
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Lists
+            html = html.replace(/^\* (.+)/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Line breaks
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+            
+            // Clean up empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+            html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<ul>)/g, '$1');
+            html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<blockquote>)/g, '$1');
+            html = html.replace(/(<\/blockquote>)<\/p>/g, '$1');
+            
+            // Blockquotes
+            html = html.replace(/^> (.+)/gim, '<blockquote>$1</blockquote>');
+            
+            return html;
+        }
+
+        function addMessage(role, content, isError = false, saveToHistory = true, imageUrl = null) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = `message-content ${isError ? 'error' : ''}`;
+            
+            // Parsear Markdown si es un mensaje del asistente
+            if (role === 'assistant' && !isError) {
+                contentDiv.innerHTML = parseMarkdown(content);
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            if (imageUrl) {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.className = 'message-image';
+                img.alt = 'Generated image';
+                contentDiv.appendChild(img);
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            if (saveToHistory && role !== 'system') {
+                const msgObj = { role, content };
+                if (imageUrl) msgObj.image = imageUrl;
+                conversationHistory.push(msgObj);
+                updateCurrentChat();
+            }
+        }
+
+        function addSources(sources) {
+            const chatArea = document.getElementById('chatArea');
+            const sourcesDiv = document.createElement('div');
+            sourcesDiv.className = 'search-sources';
+            
+            const title = document.createElement('h4');
+            title.textContent = '📚 Fuentes consultadas:';
+            sourcesDiv.appendChild(title);
+            
+            sources.forEach(source => {
+                const link = document.createElement('a');
+                link.href = source.url;
+                link.target = '_blank';
+                link.className = 'source-link';
+                link.textContent = `• ${source.title}`;
+                sourcesDiv.appendChild(link);
+            });
+            
+            chatArea.appendChild(sourcesDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addScrapeSummary(scrapeData) {
+            const chatArea = document.getElementById('chatArea');
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'scrape-summary';
+            
+            const title = document.createElement('div');
+            title.className = 'scrape-summary-title';
+            title.textContent = `📄 Análisis de: ${scrapeData.url}`;
+            summaryDiv.appendChild(title);
+            
+            const content = document.createElement('div');
+            content.className = 'scrape-summary-content';
+            content.innerHTML = parseMarkdown(scrapeData.summary);
+            summaryDiv.appendChild(content);
+            
+            const url = document.createElement('div');
+            url.className = 'scrape-summary-url';
+            url.textContent = scrapeData.url;
+            summaryDiv.appendChild(url);
+            
+            chatArea.appendChild(summaryDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // Guardar en historial
+            conversationHistory.push({ 
+                role: 'assistant', 
+                content: `Análisis de: ${scrapeData.url}`,
+                scrapeData: scrapeData
+            });
+            updateCurrentChat();
+        }
+
+        function showTypingIndicator() {
+            const chatArea = document.getElementById('chatArea');
+            const indicator = document.createElement('div');
+            indicator.className = 'message assistant';
+            indicator.innerHTML = `
+                <div class="typing-indicator active">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            indicator.id = 'typingIndicator';
+            chatArea.appendChild(indicator);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Función para detectar si una pregunta necesita búsqueda
+        function needsSearch(query) {
+            const searchKeywords = [
+                'qué es', 'quién es', 'cuándo', 'dónde', 'por qué', 'cómo',
+                'noticias', 'último', 'reciente', 'actual', 'hoy', 'ayer',
+                'triunvirato', 'cgt', 'gobierno', 'presidente', 'ministro',
+                'elecciones', 'crisis', 'economía', 'inflación', 'dólar',
+                'clima', 'tiempo', 'temperatura', 'pronóstico',
+                'partido', 'equipo', 'marcador', 'resultado', 'ganó',
+                'estrenó', 'película', 'serie', 'actor', 'actriz',
+                'descubrió', 'investigación', 'estudio', 'científico',
+                'bolsa', 'mercado', 'acciones', 'cripto', 'bitcoin',
+                'cuál es', 'cuáles son', 'dime sobre', 'información'
+            ];
+            
+            const lowerQuery = query.toLowerCase();
+            return searchKeywords.some(keyword => lowerQuery.includes(keyword)) ||
+                   lowerQuery.includes('?') ||
+                   lowerQuery.length > 20;
+        }
+
+        // Función para detectar si necesita scraping
+        function needsScraping(query) {
+            const scrapingKeywords = [
+                'analiza', 'scrapea', 'extrae', 'resume', 'qué hay en',
+                'www.', 'http', '.com', '.ar', '.org', '.gov',
+                'página web', 'sitio web', 'contenido de', 'información de',
+                'revisa', 'mira', 'explora', 'investiga'
+            ];
+            
+            const urlPattern = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/\S*)?/;
+            const lowerQuery = query.toLowerCase();
+            
+            return scrapingKeywords.some(keyword => lowerQuery.includes(keyword)) ||
+                   urlPattern.test(query);
+        }
+
+        // Función para extraer URLs del mensaje
+        function extractUrls(text) {
+            const urlPattern = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/\S*)?/g;
+            const matches = text.match(urlPattern);
+            return matches ? matches.map(url => {
+                if (!url.startsWith('http')) {
+                    return 'https://' + url;
+                }
+                return url;
+            }) : [];
+        }
+
+        // Función de búsqueda y extracción de contenido
+        async function searchAndExtract(query) {
+            try {
+                const results = [];
+                const sources = [];
+                
+                // Método 1: DuckDuckGo Instant Answer API
+                try {
+                    const ddgResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+                    if (ddgResponse.ok) {
+                        const data = await ddgResponse.json();
+                        
+                        if (data.Abstract && data.AbstractText) {
+                            results.push({
+                                title: data.Heading || 'Resumen',
+                                content: data.AbstractText,
+                                url: data.AbstractURL
+                            });
+                            sources.push({
+                                title: data.Heading || 'DuckDuckGo',
+                                url: data.AbstractURL || `https://duckduckgo.com/?q=${encodeURIComponent(query)}`
+                            });
+                        }
+                        
+                        if (data.RelatedTopics) {
+                            data.RelatedTopics.slice(0, 3).forEach(topic => {
+                                if (topic.Text && topic.FirstURL) {
+                                    results.push({
+                                        title: topic.Text.split(' - ')[0] || 'Información',
+                                        content: topic.Text,
+                                        url: topic.FirstURL
+                                    });
+                                    sources.push({
+                                        title: topic.Text.split(' - ')[0] || 'Fuente',
+                                        url: topic.FirstURL
+                                    });
+                                }
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.log('DuckDuckGo falló');
+                }
+                
+                // Método 2: Wikipedia API
+                if (results.length < 2) {
+                    try {
+                        const wikiResponse = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                        if (wikiResponse.ok) {
+                            const wikiData = await wikiResponse.json();
+                            results.push({
+                                title: wikiData.title,
+                                content: wikiData.extract,
+                                url: wikiData.content_urls?.desktop?.page
+                            });
+                            sources.push({
+                                title: 'Wikipedia',
+                                url: wikiData.content_urls?.desktop?.page
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Wikipedia falló');
+                    }
+                }
+                
+                // Método 3: Scraping de resultados de búsqueda
+                if (results.length < 2) {
+                    try {
+                        const searchUrl = `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+                        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`;
+                        const searchResponse = await fetch(proxyUrl);
+                        
+                        if (searchResponse.ok) {
+                            const html = await searchResponse.text();
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            
+                            const resultElements = doc.querySelectorAll('.result__body');
+                            resultElements.forEach((element, index) => {
+                                if (index < 2) {
+                                    const titleEl = element.querySelector('.result__title a');
+                                    const snippetEl = element.querySelector('.result__snippet');
+                                    
+                                    if (titleEl && snippetEl) {
+                                        const title = titleEl.textContent.trim();
+                                        const snippet = snippetEl.textContent.trim();
+                                        const url = titleEl.href;
+                                        
+                                        results.push({
+                                            title: title,
+                                            content: snippet,
+                                            url: url
+                                        });
+                                        sources.push({
+                                            title: title,
+                                            url: url
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Scraping de búsqueda falló');
+                    }
+                }
+                
+                return { results, sources };
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+                return { 
+                    results: [{ 
+                        title: 'Error', 
+                        content: 'No se pudo obtener información. Intenta reformular tu pregunta.',
+                        url: ''
+                    }], 
+                    sources: [] 
+                };
+            }
+        }
+
+        // Función mejorada de scraping
+        async function scrapePage(url) {
+            try {
+                // Usar múltiples proxies para mayor confiabilidad
+                const proxies = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+                ];
+                
+                let html = '';
+                let workingProxy = null;
+                
+                // Intentar con cada proxy hasta que uno funcione
+                for (const proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy);
+                        if (response.ok) {
+                            html = await response.text();
+                            workingProxy = proxy;
+                            break;
+                        }
+                    } catch (e) {
+                        console.log(`Proxy ${proxy} falló, intentando siguiente...`);
+                    }
+                }
+                
+                if (!html) {
+                    throw new Error('No se pudo acceder a la página con ningún proxy');
+                }
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extraer título
+                const title = doc.querySelector('title')?.textContent || 
+                             doc.querySelector('h1')?.textContent || 
+                             'Sin título';
+                
+                // Extraer meta description
+                const metaDesc = doc.querySelector('meta[name="description"]')?.content || '';
+                
+                // Extraer contenido principal con múltiples selectores
+                const contentSelectors = [
+                    'article', 'main', '.content', '.post-content', 
+                    '.entry-content', '.article-body', '#content',
+                    '.story-body', '.post-body'
+                ];
+                
+                let mainContent = '';
+                for (const selector of contentSelectors) {
+                    const element = doc.querySelector(selector);
+                    if (element) {
+                        mainContent = element.textContent;
+                        break;
+                    }
+                }
+                
+                // Si no se encontró contenido principal, extraer todos los párrafos
+                if (!mainContent) {
+                    const paragraphs = doc.querySelectorAll('p');
+                    mainContent = Array.from(paragraphs)
+                        .map(p => p.textContent.trim())
+                        .filter(text => text.length > 50)
+                        .join('\n\n');
+                }
+                
+                // Limpiar y estructurar el contenido
+                const cleanContent = mainContent
+                    .replace(/\s+/g, ' ')
+                    .replace(/\n\s*\n/g, '\n')
+                    .trim();
+                
+                // Extraer información estructurada
+                const structuredData = {
+                    title: title.trim(),
+                    description: metaDesc,
+                    content: cleanContent.substring(0, 2000), // Limitar a 2000 caracteres
+                    url: url,
+                    wordCount: cleanContent.split(' ').length,
+                    lastModified: doc.querySelector('meta[name="last-modified"]')?.content || null
+                };
+                
+                return structuredData;
+            } catch (error) {
+                console.error('Error al scrapear:', error);
+                return {
+                    title: 'Error al acceder',
+                    description: '',
+                    content: `No se pudo scrapear la página: ${error.message}`,
+                    url: url,
+                    wordCount: 0,
+                    lastModified: null
+                };
+            }
+        }
+
+        // Función para generar un resumen del contenido scrapeado
+        function generateScrapeSummary(scrapeData) {
+            const maxWords = 150;
+            let summary = scrapeData.content;
+            
+            if (scrapeData.wordCount > maxWords) {
+                const words = summary.split(' ');
+                summary = words.slice(0, maxWords).join(' ') + '...';
+            }
+            
+            // Agregar información adicional si está disponible
+            let fullSummary = summary;
+            
+            if (scrapeData.description && scrapeData.description !== scrapeData.content.substring(0, 100)) {
+                fullSummary = `${scrapeData.description}\n\n${summary}`;
+            }
+            
+            if (scrapeData.wordCount > maxWords) {
+                fullSummary += `\n\n[El contenido completo tiene ${scrapeData.wordCount} palabras]`;
+            }
+            
+            return fullSummary;
+        }
+
+        async function generateImage(prompt) {
+            try {
+                addMessage('system', `🖼️ Generando imagen: "${prompt}"...`);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true`;
+                return imageUrl;
+            } catch (error) {
+                addMessage('system', `❌ Error al generar imagen: ${error.message}`, true);
+                return null;
+            }
+        }
+
+        async function callPollinationsAPI(message, searchResults = null, scrapeData = null) {
+            const systemPrompt = document.getElementById('systemPrompt').value.trim();
+            const currentDate = getCurrentDate();
+            
+            const context = conversationHistory.slice(-10).map(msg => 
+                `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+            ).join('\n');
+            
+            let fullPrompt = '';
+            if (systemPrompt) {
+                fullPrompt = `Sistema: ${systemPrompt}\n`;
+                fullPrompt += `Fecha actual: ${currentDate}\n\n`;
+            }
+            if (context) {
+                fullPrompt += `${context}\n`;
+            }
+            
+            // Agregar información de búsqueda si está disponible
+            if (searchResults && searchResults.length > 0) {
+                fullPrompt += `\nInformación encontrada en la web:\n`;
+                searchResults.forEach((result, index) => {
+                    fullPrompt += `\nFuente ${index + 1}: ${result.title}\n`;
+                    fullPrompt += `${result.content}\n`;
+                });
+                fullPrompt += '\nBasado en esta información, responde la pregunta del usuario usando formato markdown cuando sea apropiado.\n\n';
+            }
+            
+            // Agregar información de scraping si está disponible
+            if (scrapeData) {
+                fullPrompt += `\nContenido scrapeado de la página:\n`;
+                fullPrompt += `Título: ${scrapeData.title}\n`;
+                fullPrompt += `URL: ${scrapeData.url}\n`;
+                fullPrompt += `Contenido: ${scrapeData.content}\n\n`;
+                fullPrompt += 'Usa esta información para responder la pregunta del usuario con formato markdown.\n\n';
+            }
+            
+            fullPrompt += `Usuario: ${message}\nAsistente:`;
+            
+            const response = await fetch('https://text.pollinations.ai/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: "user",
+                            content: fullPrompt
+                        }
+                    ],
+                    model: "openai"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const text = await response.text();
+            return text;
+        }
+
+        async function sendMessage() {
+            if (currentMode === 'voice' && !isContinuousVoiceMode) {
+                if (isListening) {
+                    recognition.stop();
+                    return;
+                } else {
+                    if (recognition) {
+                        try {
+                            recognition.start();
+                        } catch (error) {
+                            addMessage('system', '❌ Error al iniciar el reconocimiento de voz.', true);
+                        }
+                    } else {
+                        addMessage('system', '❌ El reconocimiento de voz no está disponible en este navegador.', true);
+                    }
+                    return;
+                }
+            }
+
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message && currentMode !== 'voice') return;
+
+            input.disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            addMessage('user', message);
+            input.value = '';
+
+            showTypingIndicator();
+
+            try {
+                let responseText;
+                let imageUrl = null;
+                let searchResults = null;
+                let sources = null;
+                let scrapeData = null;
+
+                if (currentMode === 'image') {
+                    imageUrl = await generateImage(message);
+                    if (imageUrl) {
+                        responseText = `Aquí está tu imagen generada para: "${message}"`;
+                        removeTypingIndicator();
+                        addMessage('assistant', responseText, false, true, imageUrl);
+                    }
+                } else {
+                    // Detectar si necesita scraping
+                    const urls = extractUrls(message);
+                    if (needsScraping(message) || urls.length > 0) {
+                        let targetUrl = '';
+                        
+                        // Si hay URLs en el mensaje, usar la primera
+                        if (urls.length > 0) {
+                            targetUrl = urls[0];
+                        } else {
+                            // Si no hay URLs pero se detectó necesidad de scraping, buscar en el mensaje
+                            const urlMatch = message.match(/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/\S*)?/);
+                            if (urlMatch) {
+                                targetUrl = urlMatch[0];
+                                if (!targetUrl.startsWith('http')) {
+                                    targetUrl = 'https://' + targetUrl;
+                                }
+                            }
+                        }
+                        
+                        if (targetUrl) {
+                            addMessage('system', `📄 Analizando página: ${targetUrl}...`);
+                            scrapeData = await scrapePage(targetUrl);
+                            if (scrapeData.content && scrapeData.content !== 'Error al acceder') {
+                                scrapeData.summary = generateScrapeSummary(scrapeData);
+                            }
+                        }
+                    }
+                    
+                    // Detectar si necesita búsqueda
+                    if (needsSearch(message) && !scrapeData) {
+                        addMessage('system', `🔍 Buscando información actualizada...`);
+                        const searchData = await searchAndExtract(message);
+                        searchResults = searchData.results;
+                        sources = searchData.sources;
+                    }
+                    
+                    responseText = await callPollinationsAPI(message, searchResults, scrapeData);
+                    removeTypingIndicator();
+                    addMessage('assistant', responseText);
+                    
+                    if (sources) {
+                        addSources(sources);
+                    }
+                    
+                    if (scrapeData && scrapeData.summary) {
+                        addScrapeSummary(scrapeData);
+                    }
+                    
+                    if (currentMode === 'voice' || isContinuousVoiceMode) {
+                        // Esperar un momento antes de hablar para dar tiempo a que se muestre el mensaje
+                        setTimeout(() => {
+                            speakText(responseText);
+                        }, 500);
+                    }
+                }
+
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Error:', error);
+                
+                let errorMsg = '❌ Error: ';
+                if (error.message.includes('429') || error.message.includes('rate')) {
+                    errorMsg += 'Límite de uso alcanzado. Espera un momento.';
+                } else if (error.message.includes('503') || error.message.includes('502')) {
+                    errorMsg += 'Servicio temporalmente no disponible. Intenta más tarde.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMsg += 'Error de conexión. Verifica tu internet.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                addMessage('system', errorMsg, true);
+            } finally {
+                input.disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+                input.focus();
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        document.getElementById('newChatBtn').addEventListener('click', createNewChat);
+        document.getElementById('toggleSidebarBtn').addEventListener('click', toggleSidebar);
+        document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
+        document.getElementById('configBtn').addEventListener('click', toggleConfig);
+        document.getElementById('closeConfigBtn').addEventListener('click', closeConfig);
+
+        document.getElementById('textMode').addEventListener('click', () => setMode('text'));
+        document.getElementById('voiceMode').addEventListener('click', () => setMode('voice'));
+        document.getElementById('imageMode').addEventListener('click', () => setMode('image'));
+
+        // Event listeners para temas
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.addEventListener('click', function() {
+                changeTheme(this.getAttribute('data-theme'));
+            });
+        });
+
+        // Event listener para overlay
+        document.getElementById('overlay').addEventListener('click', function() {
+            closeSidebar();
+            closeConfig();
+        });
+
+        // Detectar cambios en el tamaño de la ventana
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('hidden');
+                document.getElementById('overlay').classList.remove('active');
+                document.body.style.overflow = 'auto';
+            } else {
+                // En móviles, cerrar sidebar por defecto
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        });
+
+        // Mejorar manejo de eventos táctiles
+        document.addEventListener('touchstart', function() {}, {passive: true});
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            isMobile = detectMobile();
+            
+            initSpeechRecognition();
+            initContinuousVoiceMode();
+            loadChats();
+            loadSavedTheme();
+            document.getElementById('userInput').focus();
+            
+            // Ajustes específicos para móviles
+            if (isMobile) {
+                document.body.classList.add('mobile-device');
+                
+                // Prevenir zoom al enfocar inputs
+                const inputs = document.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('focus', () => {
+                        document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width,initial-scale=1,maximum-scale=1');
+                    });
+                    
+                    input.addEventListener('blur', () => {
+                        document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width,initial-scale=1');
+                    });
+                });
+                
+                // Ocultar sidebar por defecto en móviles
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
